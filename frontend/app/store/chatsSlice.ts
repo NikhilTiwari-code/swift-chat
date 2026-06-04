@@ -76,7 +76,7 @@ const chatsSlice = createSlice({
   name: "chats",
   initialState,
   reducers: {
-    selectConversation(state, action: PayloadAction<string>) {
+    selectConversation(state, action: PayloadAction<string | null>) {
       state.activeConversationId = action.payload;
     },
     receiveMessage(state, action: PayloadAction<{ conversationId: string; message: Message }>) {
@@ -114,8 +114,12 @@ const chatsSlice = createSlice({
       .addCase(fetchConversations.fulfilled, (state, action) => {
         state.status = "idle";
         state.conversations = action.payload;
-        if (!state.activeConversationId && action.payload.length > 0) {
-          state.activeConversationId = action.payload[0].id;
+        // Do NOT auto-select on mobile — user starts at chat list
+        // On desktop, auto-select first conversation only if nothing is selected
+        if (typeof window !== "undefined" && window.innerWidth >= 768) {
+          if (!state.activeConversationId && action.payload.length > 0) {
+            state.activeConversationId = action.payload[0].id;
+          }
         }
       })
       .addCase(fetchConversations.rejected, (state) => {

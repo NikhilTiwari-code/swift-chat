@@ -3,6 +3,7 @@
 import { useSelector } from "react-redux";
 import type { RootState } from "../store/store";
 import { SideNav } from "./SideNav";
+import { BottomNav } from "./BottomNav";
 import { useRealtime } from "../hooks/useRealtime";
 
 export function RootShell({ children }: { children: React.ReactNode }) {
@@ -12,8 +13,14 @@ export function RootShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-[#eae6df]">
-      {user ? <SideNav /> : null}
-      <main className="flex-1">{children}</main>
+      {/* SideNav: only visible on desktop (md+) */}
+      {user ? <div className="hidden md:flex"><SideNav /></div> : null}
+
+      {/* Main content — add bottom padding on mobile for BottomNav */}
+      <main className="flex-1 pb-16 md:pb-0">{children}</main>
+
+      {/* BottomNav: only visible on mobile */}
+      {user ? <BottomNav /> : null}
     </div>
   );
 }

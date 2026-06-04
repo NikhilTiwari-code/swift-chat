@@ -3,13 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { format } from "date-fns";
-import { Video, MoreVertical, Search, Image as ImageIcon } from "lucide-react";
+import { Video, MoreVertical, Search, Image as ImageIcon, ArrowLeft } from "lucide-react";
 import { MessageComposer } from "@/app/components/MessageComposer";
+import { Avatar } from "@/app/components/Avatar";
 import type { RootState } from "../store/store";
 import type { MockMessage, MockConversation } from "../data/mock";
 import type { Message, Conversation } from "../lib/types";
 import { useAppDispatch } from "../store/hooks";
-import { deleteChatMessage, fetchMessages, removeMessage } from "../store/chatsSlice";
+import { selectConversation, deleteChatMessage, fetchMessages, removeMessage } from "../store/chatsSlice";
 import { useCall } from "../hooks/useCall";
 import { api } from "../lib/api";
 import type { MediaItem } from "../lib/types";
@@ -91,20 +92,35 @@ export function ChatWindow() {
 
   if (!activeConversation) {
     return (
-      <section className="flex flex-1 items-center justify-center bg-[#f0f2f5]">
-        <p className="text-sm text-slate-500">Select a conversation to start chatting</p>
+      <section className="hidden flex-1 items-center justify-center bg-[#f0f2f5] md:flex">
+        <div className="text-center">
+          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </div>
+          <p className="text-sm font-medium text-slate-500">Select a conversation to start chatting</p>
+        </div>
       </section>
     );
   }
 
   return (
-    <section className="flex flex-1 flex-col bg-[#f0f2f5]">
-      <header className="flex items-center justify-between border-b border-slate-200/60 bg-white px-6 py-4">
-        <div className="flex items-center gap-3">
-          <img
-            src={headerAvatar}
-            className="h-11 w-11 rounded-full"
-            alt={headerName}
+    <section className="flex w-full flex-1 flex-col bg-[#f0f2f5]">
+      <header className="flex items-center justify-between border-b border-slate-200/60 bg-white px-3 py-3 md:px-6 md:py-4">
+        <div className="flex items-center gap-2 md:gap-3">
+          {/* Back button — only on mobile */}
+          <button
+            className="flex items-center justify-center rounded-lg p-1.5 text-slate-600 hover:bg-slate-100 md:hidden"
+            onClick={() => dispatch(selectConversation(null))}
+            aria-label="Back to chats"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <Avatar
+            name={headerName}
+            avatarUrl={activeConversation?.type === "GROUP" ? null : otherParticipant?.avatarUrl}
+            size="md"
           />
           <div>
             <p className="text-sm font-semibold text-slate-900">{headerName}</p>
@@ -139,10 +155,10 @@ export function ChatWindow() {
                 className={`flex items-end gap-2 ${isMine ? "justify-end" : "justify-start"}`}
               >
                 {!isMine ? (
-                  <img
-                    src={message.sender?.avatarUrl ?? "https://i.pravatar.cc/100?img=12"}
-                    alt={message.sender?.username ?? "User"}
-                    className="h-8 w-8 rounded-full"
+                  <Avatar
+                    name={message.sender?.username ?? "User"}
+                    avatarUrl={message.sender?.avatarUrl}
+                    size="sm"
                   />
                 ) : null}
                 <div

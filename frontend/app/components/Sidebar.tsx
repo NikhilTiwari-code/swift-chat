@@ -6,6 +6,7 @@ import type { RootState } from "../store/store";
 import { selectConversation } from "../store/chatsSlice";
 import { formatDistanceToNow } from "date-fns";
 import { Search, MessageSquarePlus, Settings, Users } from "lucide-react";
+import { Avatar } from "./Avatar";
 import Link from "next/link";
 import type { MockConversation } from "../data/mock";
 import type { Conversation } from "../lib/types";
@@ -13,6 +14,7 @@ import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import { createConversation } from "../store/chatsSlice";
 import toast from "react-hot-toast";
+import { NewChatFAB } from "./NewChatFAB";
 
 export function Sidebar() {
   const dispatch = useAppDispatch();
@@ -60,13 +62,14 @@ export function Sidebar() {
   }, [query, showModal, allUsers]);
 
   return (
-    <aside className="hidden w-90 shrink-0 border-r border-white/10 bg-[#075e54] text-white md:flex md:flex-col">
+    <aside className="relative flex w-full shrink-0 flex-col border-r border-white/10 bg-[#075e54] text-white md:w-90">
       <div className="flex items-center justify-between px-5 py-4">
         <div className="flex items-center gap-3">
-          <img
-            src={user?.avatarUrl ?? "https://i.pravatar.cc/100?img=1"}
-            alt={user?.username ?? "User"}
-            className="h-11 w-11 rounded-full border border-white/20"
+          <Avatar
+            name={user?.username ?? "You"}
+            avatarUrl={user?.avatarUrl}
+            size="md"
+            className="border-2 border-white/20"
           />
           <div>
             <p className="text-sm font-semibold">{user?.username ?? "You"}</p>
@@ -119,10 +122,10 @@ export function Sidebar() {
                 isActive ? "bg-white/15" : "hover:bg-white/10"
               }`}
             >
-              <img
-                src={displayAvatar}
-                alt={displayName}
-                className="h-12 w-12 rounded-full"
+              <Avatar
+                name={displayName}
+                avatarUrl={chat.type === "GROUP" ? null : otherParticipant?.avatarUrl}
+                size="md"
               />
               <div className="flex-1">
                 <div className="flex items-center justify-between">
@@ -264,6 +267,10 @@ export function Sidebar() {
           </div>
         </div>
       ) : null}
+
+      {/* WhatsApp-style FAB — bottom right corner */}
+      <NewChatFAB />
+
     </aside>
   );
 }
