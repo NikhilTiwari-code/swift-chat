@@ -15,19 +15,20 @@ export const useCall = (conversationId: string | null, currentUserId?: string | 
   const callState = useSelector((state: RootState) => state.call);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
+  const iceQueueRef = useRef<RTCIceCandidateInit[]>([]);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
 
   // ── Peer connection setup ──
-  const initPeer = useCallback(async () => {
+  const initPeer = useCallback(async (callIdToUse: string) => {
     const pc = new RTCPeerConnection({ iceServers });
     pcRef.current = pc;
 
     pc.onicecandidate = (event) => {
-      if (event.candidate && callState.callId) {
+      if (event.candidate && callIdToUse) {
         wsManager.send({
           type: "call:ice",
-          payload: { conversationId, candidate: event.candidate, callId: callState.callId },
+          payload: { conversationId, candidate: event.candidate, callId: callIdToUse },
         });
       }
     };
@@ -37,7 +38,7 @@ export const useCall = (conversationId: string | null, currentUserId?: string | 
     };
 
     return pc;
-  }, [conversationId, callState.callId]);
+  }, [conversationId]);
 
   // ── Start outgoing call ──
   const startCall = useCallback(async (video: boolean) => {
@@ -54,7 +55,7 @@ export const useCall = (conversationId: string | null, currentUserId?: string | 
 
       dispatch(setCallActive({ callId, conversationId }));
 
-      const pc = await initPeer();
+      const pc = await initPeer(callId);
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
       const offer = await pc.createOffer();
@@ -64,7 +65,8 @@ export const useCall = (conversationId: string | null, currentUserId?: string | 
         type: "call:offer",
         payload: { conversationId, sdp: offer, callId, video },
       });
-    } catch {
+    } catch (err) {
+      console.error("startCall error:", err);
       dispatch(clearCall());
       toast.error("Unable to start call. Allow camera/mic permissions.");
     }
@@ -80,8 +82,21 @@ export const useCall = (conversationId: string | null, currentUserId?: string | 
       });
       setLocalStream(stream);
 
-      const pc = await initPeer();
+      const pc = await initPeer(callState.callId);
       await pc.setRemoteDescription(new RTCSessionDescription(callState.sdpOffer));
+
+      // Process queued candidates
+      if (iceQueueRef.current.length > 0) {
+        for (const candidate of iceQueueRef.current) {
+          try {
+            await pc.addIceCandidate(new RTCIceCandidate(candidate));
+          } catch (e) {
+            console.error("Failed to add queued ice candidate", e);
+          }
+        }
+        iceQueueRef.current = [];
+      }
+
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
       const answer = await pc.createAnswer();
@@ -93,7 +108,8 @@ export const useCall = (conversationId: string | null, currentUserId?: string | 
       });
 
       dispatch(setCallActive({ callId: callState.callId, conversationId: callState.conversationId! }));
-    } catch {
+    } catch (err) {
+      console.error("answerCall error:", err);
       toast.error("Unable to answer call.");
       dispatch(clearCall());
     }
@@ -111,6 +127,7 @@ export const useCall = (conversationId: string | null, currentUserId?: string | 
     remoteStream?.getTracks().forEach((t) => t.stop());
     setLocalStream(null);
     setRemoteStream(null);
+    iceQueueRef.current = [];
     pcRef.current?.close();
     pcRef.current = null;
     dispatch(clearCall());
@@ -119,35 +136,59 @@ export const useCall = (conversationId: string | null, currentUserId?: string | 
   // ── Listen for call signals via wsManager ──
   useEffect(() => {
     const unsubscribe = wsManager.subscribe(async (payload) => {
+      const p = payload.payload as Record<string, unknown>;
+      if (!p) return;
+
+      // Verify that this call message is relevant to us (match by callId or conversationId)
+      const matchesCall = p.callId && callState.callId 
+        ? p.callId === callState.callId 
+        : p.conversationId === conversationId;
+
+      if (!matchesCall) return;
+
       // Answer received (we were the caller)
       if (
         payload.type === "call:answer" &&
-        (payload.payload as Record<string, unknown>)?.conversationId === conversationId &&
-        (payload.payload as Record<string, unknown>)?.fromUserId !== currentUserId
+        p.fromUserId !== currentUserId
       ) {
         const pc = pcRef.current;
         if (!pc) return;
-        const p = payload.payload as Record<string, unknown>;
         await pc.setRemoteDescription(new RTCSessionDescription(p.sdp as RTCSessionDescriptionInit));
+
+        // Process queued candidates
+        if (iceQueueRef.current.length > 0) {
+          for (const candidate of iceQueueRef.current) {
+            try {
+              await pc.addIceCandidate(new RTCIceCandidate(candidate));
+            } catch (e) {
+              console.error("Failed to add queued ice candidate", e);
+            }
+          }
+          iceQueueRef.current = [];
+        }
       }
 
-      // ICE candidate
+      // ICE candidate received
       if (
         payload.type === "call:ice" &&
-        (payload.payload as Record<string, unknown>)?.conversationId === conversationId &&
-        (payload.payload as Record<string, unknown>)?.fromUserId !== currentUserId
+        p.fromUserId !== currentUserId
       ) {
         const pc = pcRef.current;
-        if (!pc) return;
-        const p = payload.payload as Record<string, unknown>;
-        await pc.addIceCandidate(new RTCIceCandidate(p.candidate as RTCIceCandidateInit));
+        const candidate = p.candidate as RTCIceCandidateInit;
+        if (pc && pc.remoteDescription) {
+          try {
+            await pc.addIceCandidate(new RTCIceCandidate(candidate));
+          } catch (e) {
+            console.error("Failed to add ice candidate", e);
+          }
+        } else {
+          iceQueueRef.current.push(candidate);
+        }
       }
-
-      // Hangup (from Redux via useRealtime already dispatches clearCall)
     });
 
     return unsubscribe;
-  }, [conversationId, currentUserId]);
+  }, [conversationId, currentUserId, callState.callId]);
 
   // Derived state — merge Redux + local streams
   const state = {

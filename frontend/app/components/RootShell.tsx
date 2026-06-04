@@ -5,6 +5,7 @@ import type { RootState } from "../store/store";
 import { SideNav } from "./SideNav";
 import { BottomNav } from "./BottomNav";
 import { useRealtime } from "../hooks/useRealtime";
+import { GlobalCallUI } from "./GlobalCallUI";
 
 export function RootShell({ children }: { children: React.ReactNode }) {
   const user = useSelector((state: RootState) => state.auth.user);
@@ -21,6 +22,9 @@ export function RootShell({ children }: { children: React.ReactNode }) {
 
       {/* BottomNav: only visible on mobile */}
       {user ? <BottomNav /> : null}
+
+      {/* Global Call Overlay (signals/UI) */}
+      <GlobalCallUI />
     </div>
   );
 }

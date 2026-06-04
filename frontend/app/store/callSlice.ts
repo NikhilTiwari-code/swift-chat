@@ -7,6 +7,7 @@ export type CallState = {
   conversationId: string | null;
   incomingVideo: boolean;
   sdpOffer: RTCSessionDescriptionInit | null;
+  outbound: { video: boolean; conversationId: string } | null;
 };
 
 const initialState: CallState = {
@@ -16,12 +17,22 @@ const initialState: CallState = {
   conversationId: null,
   incomingVideo: true,
   sdpOffer: null,
+  outbound: null,
 };
 
 const callSlice = createSlice({
   name: "call",
   initialState,
   reducers: {
+    initiateCall(state, action: PayloadAction<{ conversationId: string; video: boolean }>) {
+      state.outbound = {
+        video: action.payload.video,
+        conversationId: action.payload.conversationId,
+      };
+    },
+    clearOutbound(state) {
+      state.outbound = null;
+    },
     setIncomingCall(
       state,
       action: PayloadAction<{
@@ -50,9 +61,10 @@ const callSlice = createSlice({
       state.conversationId = null;
       state.incomingVideo = true;
       state.sdpOffer = null;
+      state.outbound = null;
     },
   },
 });
 
-export const { setIncomingCall, setCallActive, clearCall } = callSlice.actions;
+export const { initiateCall, clearOutbound, setIncomingCall, setCallActive, clearCall } = callSlice.actions;
 export default callSlice.reducer;
