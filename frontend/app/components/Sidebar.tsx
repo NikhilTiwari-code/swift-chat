@@ -62,9 +62,10 @@ export function Sidebar() {
   }, [query, showModal, allUsers]);
 
   return (
-    <aside className="relative flex w-full shrink-0 flex-col border-r border-white/10 bg-[#075e54] text-white md:w-90">
-      <div className="flex items-center justify-between px-5 py-4">
-        <div className="flex items-center gap-3">
+    <aside className="relative flex w-full shrink-0 flex-col border-r border-slate-200 bg-white text-slate-800 md:bg-[#075e54] md:text-white md:w-90 md:border-white/10">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 md:border-b-0">
+        {/* Desktop Profile Section */}
+        <div className="hidden md:flex items-center gap-3">
           <Avatar
             name={user?.username ?? "You"}
             avatarUrl={user?.avatarUrl}
@@ -76,28 +77,34 @@ export function Sidebar() {
             <p className="text-xs text-emerald-200">Online</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-white/80">
+
+        {/* Mobile SwiftChat Logo Section */}
+        <div className="block md:hidden">
+          <span className="text-2xl font-bold text-emerald-600 tracking-tight">SwiftChat</span>
+        </div>
+
+        <div className="flex items-center gap-2 text-slate-500 md:text-white/80">
           <button
-            className="rounded-lg p-2 hover:bg-white/10"
+            className="rounded-lg p-2 hover:bg-slate-100 md:hover:bg-white/10"
             aria-label="New chat"
             onClick={() => setShowModal(true)}
           >
             <MessageSquarePlus className="h-5 w-5" />
           </button>
-          <button className="rounded-lg p-2 hover:bg-white/10" aria-label="Groups">
+          <button className="rounded-lg p-2 hover:bg-slate-100 md:hover:bg-white/10" aria-label="Groups">
             <Users className="h-5 w-5" />
           </button>
-          <Link href="/profile" className="rounded-lg p-2 hover:bg-white/10" aria-label="Profile">
+          <Link href="/profile" className="rounded-lg p-2 hover:bg-slate-100 md:hover:bg-white/10" aria-label="Profile">
             <Settings className="h-5 w-5" />
           </Link>
         </div>
       </div>
 
       <div className="px-5 pb-3">
-        <div className="flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2">
-          <Search className="h-4 w-4 text-white/70" />
+        <div className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 md:rounded-xl md:bg-white/10 md:px-3 md:py-2">
+          <Search className="h-4 w-4 text-slate-400 md:text-white/70" />
           <input
-            className="w-full bg-transparent text-sm text-white placeholder:text-white/50 focus:outline-none"
+            className="w-full bg-transparent text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none md:text-white md:placeholder:text-white/50"
             placeholder="Search or start new chat"
           />
         </div>
@@ -110,16 +117,14 @@ export function Sidebar() {
           const lastTime = chat.lastMessageAt ?? chat.messages?.[0]?.createdAt;
           const otherParticipant = chat.participants.find((p) => p.userId !== user?.id)?.user;
           const displayName = chat.type === "GROUP" ? chat.title ?? "Group" : otherParticipant?.username ?? "Direct chat";
-          const displayAvatar =
-            chat.type === "GROUP"
-              ? "https://i.pravatar.cc/100?img=5"
-              : otherParticipant?.avatarUrl ?? "https://i.pravatar.cc/100?img=32";
           return (
             <button
               key={chat.id}
               onClick={() => dispatch(selectConversation(chat.id))}
               className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition ${
-                isActive ? "bg-white/15" : "hover:bg-white/10"
+                isActive
+                  ? "bg-slate-100 text-slate-900 md:bg-white/15 md:text-white"
+                  : "hover:bg-slate-50 text-slate-700 md:hover:bg-white/10 md:text-white/80"
               }`}
             >
               <Avatar
@@ -129,14 +134,14 @@ export function Sidebar() {
               />
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-white">{displayName}</p>
-                  <span className="text-[11px] text-white/70">
+                  <p className={`text-sm font-semibold ${isActive ? "text-slate-900 md:text-white" : "text-slate-800 md:text-white"}`}>{displayName}</p>
+                  <span className="text-[11px] text-slate-400 md:text-white/70">
                     {lastTime
                       ? formatDistanceToNow(new Date(lastTime), { addSuffix: false })
                       : ""}
                   </span>
                 </div>
-                <p className="mt-1 line-clamp-1 text-xs text-white/70">{lastMessage}</p>
+                <p className="mt-1 line-clamp-1 text-xs text-slate-500 md:text-white/70">{lastMessage}</p>
               </div>
             </button>
           );

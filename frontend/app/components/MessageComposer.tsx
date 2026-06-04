@@ -231,20 +231,20 @@ export function MessageComposer({ conversationId }: { conversationId: string }) 
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="border-t border-slate-200/60 bg-white px-6 py-4"
+      className="border-t border-slate-200/60 bg-white px-4 py-3.5 md:px-6"
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 md:gap-3">
         <div className="relative">
           <button
             type="button"
-            className={`rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 ${
+            className={`rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100 ${
               emojiOpen ? "bg-emerald-50 text-emerald-600" : ""
             }`}
             aria-label="Open emoji picker"
             aria-expanded={emojiOpen}
             onClick={() => setEmojiOpen((open) => !open)}
           >
-            <SmilePlus className="h-5 w-5" />
+            <SmilePlus className="h-4.5 w-4.5" />
           </button>
 
           {emojiOpen ? (
@@ -294,11 +294,11 @@ export function MessageComposer({ conversationId }: { conversationId: string }) 
         />
         <button
           type="button"
-          className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
+          className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
         >
-          <Paperclip className="h-5 w-5" />
+          <Paperclip className="h-4.5 w-4.5" />
         </button>
         <div className="relative flex-1">
           <input
@@ -308,19 +308,19 @@ export function MessageComposer({ conversationId }: { conversationId: string }) 
               messageInputRef.current = node;
             }}
             placeholder="Type a message"
-            className="w-full rounded-full border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-emerald-400 focus:outline-none"
+            className="w-full rounded-full border border-slate-200 bg-slate-50 px-5 py-3 text-base text-slate-900 focus:border-emerald-400 focus:outline-none"
           />
           {helper ? (
-            <span className="absolute left-4 top-12 text-[11px] text-rose-500">{helper}</span>
+            <span className="absolute left-4 top-13 text-[11px] text-rose-500">{helper}</span>
           ) : null}
         </div>
         <button
           type="submit"
           disabled={isSubmitting || uploading}
-          className="flex items-center gap-2 rounded-full bg-emerald-500 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 disabled:opacity-60"
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm transition hover:bg-emerald-600 disabled:opacity-60 hover:scale-105 active:scale-95"
+          aria-label={uploading ? "Uploading" : "Send message"}
         >
-          <Send className="h-4 w-4" />
-          {uploading ? "Uploading..." : "Send"}
+          <Send className="h-4.5 w-4.5" />
         </button>
       </div>
     </form>
