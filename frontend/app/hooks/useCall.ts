@@ -50,7 +50,14 @@ export const useCall = (conversationId: string | null, currentUserId?: string | 
       }
 
       const callId = (globalThis.crypto?.randomUUID?.() ?? `call-${Date.now()}`) as string;
-      const stream = await navigator.mediaDevices.getUserMedia({ video, audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video,
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
       setLocalStream(stream);
 
       dispatch(setCallActive({ callId, conversationId }));
@@ -78,7 +85,11 @@ export const useCall = (conversationId: string | null, currentUserId?: string | 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: callState.incomingVideo,
-        audio: true,
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
       });
       setLocalStream(stream);
 

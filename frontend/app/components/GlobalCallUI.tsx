@@ -69,55 +69,54 @@ export function GlobalCallUI() {
 
       {/* Active Call UI overlay */}
       {call.state.active ? (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-black">
-          {/* Videos Container */}
-          <div className="relative flex-1 overflow-hidden">
-            {/* Remote Stream Video */}
+        <div className="fixed inset-0 z-[100] bg-black">
+          {/* Full Screen Remote Video */}
+          <video
+            ref={(el) => {
+              if (el && call.state.remoteStream) {
+                if (el.srcObject !== call.state.remoteStream) {
+                  el.srcObject = call.state.remoteStream;
+                }
+              }
+            }}
+            autoPlay
+            playsInline
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+
+          {/* Local Stream Video PIP */}
+          <div className="absolute right-4 top-4 z-20 h-32 w-24 overflow-hidden rounded-2xl border-2 border-white/30 shadow-2xl md:h-48 md:w-36">
             <video
               ref={(el) => {
-                if (el && call.state.remoteStream) {
-                  if (el.srcObject !== call.state.remoteStream) {
-                    el.srcObject = call.state.remoteStream;
+                if (el && call.state.localStream) {
+                  if (el.srcObject !== call.state.localStream) {
+                    el.srcObject = call.state.localStream;
                   }
                 }
               }}
               autoPlay
               playsInline
+              muted
               className="h-full w-full object-cover"
             />
-            {/* Local Stream Video PIP */}
-            <div className="absolute right-4 top-4 h-32 w-24 overflow-hidden rounded-2xl border-2 border-white/30 shadow-2xl md:h-48 md:w-36">
-              <video
-                ref={(el) => {
-                  if (el && call.state.localStream) {
-                    if (el.srcObject !== call.state.localStream) {
-                      el.srcObject = call.state.localStream;
-                    }
-                  }
-                }}
-                autoPlay
-                playsInline
-                muted
-                className="h-full w-full object-cover"
-              />
-            </div>
-            {/* Call Participant Label */}
-            <div className="absolute left-4 top-4 rounded-xl bg-black/40 px-3 py-1.5 backdrop-blur-sm">
-              <p className="text-sm font-semibold text-white">{headerName}</p>
-              <p className="text-xs text-white/70">Connected</p>
-            </div>
           </div>
 
-          {/* Controls Bar */}
-          <div className="flex items-center justify-center gap-6 bg-black/80 py-8 pb-[max(2rem,env(safe-area-inset-bottom))]">
+          {/* Call Participant Label */}
+          <div className="absolute left-4 top-4 z-20 rounded-xl bg-black/40 px-3 py-1.5 backdrop-blur-sm">
+            <p className="text-sm font-semibold text-white">{headerName}</p>
+            <p className="text-xs text-white/70">Connected</p>
+          </div>
+
+          {/* Floating Controls Bar */}
+          <div className="absolute bottom-8 left-1/2 z-20 -translate-x-1/2 flex items-center gap-6 bg-black/55 backdrop-blur-md px-6 py-4 rounded-full border border-white/10 shadow-2xl">
             <MuteButton localStream={call.state.localStream} />
             <button
               onClick={() => call.hangup()}
-              className="flex h-16 w-16 items-center justify-center rounded-full bg-rose-500 shadow-lg shadow-rose-500/40 transition hover:bg-rose-600"
+              className="flex h-14 w-14 items-center justify-center rounded-full bg-rose-500 shadow-lg shadow-rose-500/30 transition hover:bg-rose-600 hover:scale-105 active:scale-95"
             >
-              <Phone className="h-7 w-7 rotate-[135deg] text-white" />
+              <Phone className="h-6 w-6 rotate-[135deg] text-white" />
             </button>
-            <button className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-white transition hover:bg-white/30">
+            <button className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 hover:scale-105 active:scale-95">
               <Video className="h-5 w-5" />
             </button>
           </div>
