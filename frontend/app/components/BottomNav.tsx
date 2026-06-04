@@ -14,9 +14,13 @@ const tabs = [
 
 export function BottomNav() {
   const pathname = usePathname();
+  const callActive = useSelector((state: RootState) => state.call.active || state.call.incoming);
   const unreadCount = useSelector((state: RootState) =>
     state.notifications.items.filter((item) => !item.readAt).length
   );
+
+  // Hide during active/incoming call — video covers full screen
+  if (callActive) return null;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-slate-200 bg-white px-2 pb-safe md:hidden"

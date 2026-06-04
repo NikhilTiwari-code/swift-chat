@@ -1,10 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
+import type { RootState } from "../store/store";
 import { Pencil } from "lucide-react";
 
 export function NewChatFAB() {
   const router = useRouter();
+  const callActive = useSelector((state: RootState) => state.call.active || state.call.incoming);
+
+  // Hide during call
+  if (callActive) return null;
 
   return (
     <button
